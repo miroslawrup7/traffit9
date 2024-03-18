@@ -113,7 +113,6 @@ const removePaddingBottomToFilterList = (filterList) => {
     filterList.closest(".element").style.height = ""
 }
 
-
 const addPaddingBottomToFilterList = (filterList) => {
     if (filterList.closest(".element").style.paddingBottom === "" ) {
         const listCount = Array.from(document.querySelector(".list").querySelectorAll("ul")).reduce((count, ul) => count + ul.querySelectorAll("li").length, 0);
@@ -247,14 +246,18 @@ const actionAfterFilterInputChange = (e) => {
    
     const indexFilter = filterListLocArray.indexOf(filterParentLoc);
 
+    console.log(indexFilter)
+
     if (e.target.checked) {
-        selectedOptionsInFilterArray[indexFilter].push(e.target.value);
+        console.log(selectedOptionsInFilterArray)
+        console.log(selectedOptionsInFilterArray[indexFilter])
+        selectedOptionsInFilterArray[indexFilter].push(e.target.name);
     } else {
         const indexDeletedItem = selectedOptionsInFilterArray[indexFilter].indexOf(e.target.id);
         selectedOptionsInFilterArray[indexFilter].splice(indexDeletedItem,1);
     }
 
-    selectedOptionsInFilterArray[indexFilter]
+    console.log(selectedOptionsInFilterArray)
 
     if (selectedOptionsInFilterArray[indexFilter].length !== 0) {
         filtersListTitleLoc.classList.add("mini");
@@ -296,8 +299,6 @@ const addListenerToFilterListsElements = () => {
 // create RECORDS BOXES ///////////////////////////////////////////////
 const createRecordBoxes = (recordsArray, firstRecordNumber, recordsOnPage) => {
     resultsLoc.replaceChildren();
-
-    console.log("record_boxes", recordsArray)
 
     for (let i = firstRecordNumber; i < recordsOnPage; i++) {
         // colouring of records by type of recruitment
@@ -457,8 +458,6 @@ const createFilteredRecordsArray = () => {
 
     let filteredRecordsArray = allRecordsArray;
 
-    console.log("filteredRecordsArray", filteredRecordsArray)
-
     // selectedBranches ////////////////
     let selectedBranches = [];
 
@@ -494,8 +493,6 @@ const createFilteredRecordsArray = () => {
         filteredRecordsArray_1 = filteredRecordsArray;
     }
 
-    console.log("filteredRecordsArray_1  before Job Formes", filteredRecordsArray_1)
-
     // selectedJobForms ////////////////
     let selectedJobForms = [];
 
@@ -529,8 +526,6 @@ const createFilteredRecordsArray = () => {
         filteredRecordsArray_2 = filteredRecordsArray_1;
     }
 
-    console.log("filteredRecordsArray_2 after JobForms before Job Types", filteredRecordsArray_2)
-
     // selectedJobTypes ////////////////
     let selectedjobTypes = Array.from(jobTypeChildrenLoc)
         .filter(function (elem) {
@@ -559,8 +554,6 @@ const createFilteredRecordsArray = () => {
     } else {
         filteredRecordsArray_3 = filteredRecordsArray_2;
     }
-
-    console.log("filteredRecordsArray_3 after job types  before langs", filteredRecordsArray_3)
 
     // selectedLangs ////////////////
     let selectedLangs = [];
@@ -597,8 +590,6 @@ const createFilteredRecordsArray = () => {
         filteredRecordsArray_4 = filteredRecordsArray_3
     }
 
-    console.log("filteredRecordsArray_4 after Langs before Country", filteredRecordsArray_4)
-
     // selectedCountry ////////////////
 
     let selectedCountry = []
@@ -627,28 +618,30 @@ const createFilteredRecordsArray = () => {
 
     // selectedCity & selectedDistance ////////////////
 
-    console.log("filteredRecordsArray_6 after Country before City", filteredRecordsArray_6)
-
     let selectedCity = [];
 
     if (Object.keys(filterConfigData).length !== 0 && filterConfigData.location_city_filter.length) {
         selectedCity = filterConfigData.location_city_filter
         cityLoc.style.display = "none"
     } else {
+
+        console.log(citiesChildrenLoc)
+        console.log(Array.from(citiesChildrenLoc))
         selectedCity = Array.from(citiesChildrenLoc)
         .filter(function (elem) {
             if (elem.value) {
+                console.log(elem.value, elem.checked)
                 return elem.checked
             }
         })
         .map(function (elem) {
             if (elem.value) {
-                return elem.value
+                return [elem.value, elem.dataset.county]
             }
         })
-    }
 
-    console.log("selctedCity", selectedCity)
+        console.log(selectedCity)
+    }
     
     let filteredRecordsArray_7 = []
 
@@ -667,25 +660,38 @@ const createFilteredRecordsArray = () => {
         let min_longi
         let max_longi
 
-        console.log("filteredRecordsArray_6 before foreach", filteredRecordsArray_6)
-
         selectedCity.forEach((el_city) => {
             filteredRecordsArray_6.forEach((el_record) => {
-                if (el_record.city === "Sosnowiec") { console.log("el_record", el_record)}
-                if (el_city === el_record.city) {
-                    if (el_record.city === "Sosnowiec") { console.log("el_record2", el_record)}
-                    lati = el_record.lati
-                    longi = el_record.longi
-                    if (el_record.city === "Sosnowiec") { console.log("lati", lati)}
-                    if (el_record.city === "Sosnowiec") { console.log("longi", longi)}
-                    if (Object.keys(filterConfigData).length !== 0 && filterConfigData.location_distance !== null) {
-                        selectedDistance = filterConfigData.location_distance
-                        distanceLoc.style.display = "none"
+                
+                if (el_city[1] !== "") {
+                    console.log(el_city[1])
+                    if (el_city[0] === el_record.city && el_city[1] === el_record.county) {
+                        console.log(el_record.county)
+                        lati = el_record.lati
+                        longi = el_record.longi
+                        if (Object.keys(filterConfigData).length !== 0 && filterConfigData.location_distance !== null) {
+                            selectedDistance = filterConfigData.location_distance
+                            distanceLoc.style.display = "none"
+                        }
+                        min_lati = lati - selectedDistance * 0.009044
+                        max_lati = lati + selectedDistance * 0.009044
+                        min_longi = longi - (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
+                        max_longi = longi + (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
                     }
-                    min_lati = lati - selectedDistance * 0.009044
-                    max_lati = lati + selectedDistance * 0.009044
-                    min_longi = longi - (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
-                    max_longi = longi + (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
+                } else {
+                    if (el_city[0] === el_record.city) {
+                        console.log(el_city[0])
+                        lati = el_record.lati
+                        longi = el_record.longi
+                        if (Object.keys(filterConfigData).length !== 0 && filterConfigData.location_distance !== null) {
+                            selectedDistance = filterConfigData.location_distance
+                            distanceLoc.style.display = "none"
+                        }
+                        min_lati = lati - selectedDistance * 0.009044
+                        max_lati = lati + selectedDistance * 0.009044
+                        min_longi = longi - (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
+                        max_longi = longi + (selectedDistance * 0.0089831) / Math.cos((lati * Math.PI) / 180)
+                    }
                 }
             })
 
@@ -704,8 +710,6 @@ const createFilteredRecordsArray = () => {
     } else {
         filteredRecordsArray_7 = filteredRecordsArray_6
     }
-
-    console.log("filteredRecordsArray_7 after City before Remote", filteredRecordsArray_7)
    
     // selectedRemote ////////////////
 
@@ -728,8 +732,6 @@ const createFilteredRecordsArray = () => {
             filteredRecordsArray_8 = filteredRecordsArray_7
         }
 
-        console.log("filteredRecordsArray_8 after REmote before Location", filteredRecordsArray_8)
-
     // selectedRelocation ////////////////
     let filteredRecordsArray_9 = []
 
@@ -748,8 +750,6 @@ const createFilteredRecordsArray = () => {
     } else {
         filteredRecordsArray_9 = filteredRecordsArray_8
     }
-
-    console.log("filteredRecordsArray_9 after Location before search tekst", filteredRecordsArray_9)
 
     // searchText ////////////////
 
@@ -787,8 +787,6 @@ const createFilteredRecordsArray = () => {
         filteredRecordsArray_10 = filteredRecordsArray_9
     }
 
-    console.log("filteredRecordsArray_10 after search tekst before recuirement type", filteredRecordsArray_10)
-
     // selectedRecruitmentType (coloring of records) ////////////////
 
     filteredRecordsArray_11 = []
@@ -813,8 +811,6 @@ const createFilteredRecordsArray = () => {
     }  else {
         filteredRecordsArray_11 = filteredRecordsArray_10
     }
-
-    console.log("filteredRecordsArray_11 after recuirement type", filteredRecordsArray_11)
 
     recordsNumber = filteredRecordsArray_11.length
 
@@ -975,30 +971,53 @@ const createFilterLists = (filterConfigData) => {
                 return accumulator;
             }, {});
 
+            console.log(filterCountriesList)
+
         let allCitiesObj = [];
         for (let key in filterCountriesList) {
             allCitiesObj = allCitiesObj.concat(filterCountriesList[key]);
         }
 
+         console.log(allCitiesObj)
+
         let allCitiesArray = [];
         allCitiesObj.forEach((el) => {
-            allCitiesArray.push(el.city);
+            allCitiesArray.push([el.city, el.county]);
         });
 
-        allCitiesArray.sort(function (a, b) {
-            return a.localeCompare(b);
+        console.log(allCitiesArray)
+
+        allCitiesArray.forEach((elem, index) => {
+            let duplicateExist = false
+            allCitiesArray.forEach((elm, id) => {
+                if (elem[0] === elm[0] && index !== id) {
+                    duplicateExist = true
+                }
+            })
+            if (!duplicateExist) {
+                allCitiesArray[index][1] = ""
+            }
+        })
+       
+        console.log(allCitiesArray)
+
+        allCitiesArray.sort(function ([a], [b]) {
+            return a[0].localeCompare(b[0]);
         });
 
         allCitiesArray.forEach(function (el) {
+            let cityText
+            el[1] ? cityText = el[0] + " (pow. " + el[1] + ")" : cityText = el[0]
+
             citiesLoc.insertAdjacentHTML(
                 "beforeend",
                 `<li>
                 <div class="checkbox-container-small">
                     <label class="checkbox">
-                        <input type="checkbox" id="${el}" name="${el}" value="${el}">
+                        <input type="checkbox" id="${cityText}" name="${cityText}" value="${el[0]}" data-county="${el[1]}">
                         <span class="checkmark"></span>
                     </label>
-                    <label class="label-text" for="${el}">${el}</label>
+                    <label class="label-text" for="${cityText}">${cityText}</label>
                 </div>
             </li>`
             );
@@ -1438,9 +1457,10 @@ const createDataForFilters = (
     salaryTo,
     country,
     city,
+    county,
     lati,
     longi
-) => {
+    ) => {
 
     // BranchesList
    
@@ -1488,30 +1508,39 @@ const createDataForFilters = (
 
     // CountriesList
 
+    // console.log(filterCountriesList)
+
     if (Object.keys(filterConfigData).length !== 0) {
         if (!filterCountriesList[country]) {
             filterCountriesList[country] = []
         }
         if (filterConfigData.location_city_filter.length) {
             if (filterConfigData.location_city_filter.indexOf(city) !== -1) {
-                filterCountriesList[country].push({
-                    city: city,
-                    lati: lati,
-                    longi: longi,
-                });
+                if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city && arr_el.county === county) === -1) { // wczesniej tu było bez tego warunku
+                    filterCountriesList[country].push({
+                        city: city,
+                        county: county,
+                        lati: lati,
+                        longi: longi,
+                    });
+                }
             }
         } else if (filterConfigData.location_country_filter.length) {
             if (filterConfigData.location_country_filter.indexOf(country) !== -1) {
-                filterCountriesList[country].push({
-                    city: city,
-                    lati: lati,
-                    longi: longi,
-                });
+                if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city && arr_el.county === county) === -1) { // wczesniej tu było bez tego warunkus
+                    filterCountriesList[country].push({
+                        city: city,
+                        county: county,
+                        lati: lati,
+                        longi: longi,
+                    });
+                }
             }
         } else {
-            if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city) === -1) {
+            if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city && arr_el.county === county) === -1) {
                 filterCountriesList[country].push({
                     city: city,
+                    county: county,
                     lati: lati,
                     longi: longi,
                 });
@@ -1521,18 +1550,25 @@ const createDataForFilters = (
         if (!filterCountriesList[country]) {
             filterCountriesList[country] = []
         }
-        if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city) === -1) {
+        if (filterCountriesList[country].findIndex((arr_el) => arr_el.city === city && arr_el.county === county) === -1) {
             filterCountriesList[country].push({
                 city: city,
+                county: county,
                 lati: lati,
                 longi: longi,
             });
         }
     }
+
+    // console.log(filterCountriesList)
 }
 
 // create OBJECTS ARRAY from Raw API JSON ///////////////////////////////////////////////
 const reworkData = (rawAPIArray) => {
+
+    console.log(rawAPIArray)
+    console.log(allRecordsArray)
+
     rawAPIArray.forEach((el) => {
 
         let parsedJobLocation;
@@ -1555,6 +1591,7 @@ const reworkData = (rawAPIArray) => {
             jobForm: el.options._forma_zatrudnienia,
             country: parsedJobLocation.country,
             city: parsedJobLocation.locality,
+            county: parsedJobLocation.region2,
             lati: parseFloat(parsedJobLocation.latitude),
             longi: parseFloat(parsedJobLocation.longitude),
             description: el.advert.values,
@@ -1571,16 +1608,20 @@ const reworkData = (rawAPIArray) => {
             parseInt(el.options._spodziewane_wynagrodzenie_do),
             parsedJobLocation.country,
             parsedJobLocation.locality,
+            parsedJobLocation.region2,
             parseFloat(parsedJobLocation.latitude),
             parseFloat(parsedJobLocation.longitude)
         );
     });
+
+    console.log(allRecordsArray)
 }
 
 // gets DATA FROM API ///////////////////////////////////////////////
 const getAPI = (apiPage) => {
     const response = fetch(
-        "https://grupaprogres.traffit.com/public/job_posts/published",
+        // "https://grupaprogres.traffit.com/public/job_posts/published", tymczasowo
+        "./config/response.json",
         {
             mode: "cors",
             headers: {
@@ -1617,15 +1658,15 @@ const loopOnAPI = (jsonData, filterConfigData) => {
     if (jsonData.length > 0 && apiNumber === 1) {
         rawAPIArray = rawAPIArray.concat(jsonData)
         apiPage++
-        createRecordsObjFromAPI(apiPage, filterConfigData)
-    } else if (jsonData.length === 0  && apiNumber === 1) {
-        apiPage = 1
-        createRecordsObjFromAPI_2(apiPage, filterConfigData)
-    } else if (jsonData.length > 0  && apiNumber === 2) {
-        rawAPIArray = rawAPIArray.concat(jsonData)
-        apiPage++
-        createRecordsObjFromAPI_2(apiPage, filterConfigData)
-    } else {
+        // createRecordsObjFromAPI(apiPage, filterConfigData)
+    // } else if (jsonData.length === 0  && apiNumber === 1) {
+    //     apiPage = 1
+    //     createRecordsObjFromAPI_2(apiPage, filterConfigData)
+    // } else if (jsonData.length > 0  && apiNumber === 2) {
+    //     rawAPIArray = rawAPIArray.concat(jsonData)
+    //     apiPage++
+    //     createRecordsObjFromAPI_2(apiPage, filterConfigData)
+    // } else {
         reworkData(rawAPIArray)
         recordsNumber = rawAPIArray.length
         createAwardedRecordBoxes(allRecordsArray, filterConfigData)
@@ -1644,6 +1685,7 @@ async function createRecordsObjFromAPI(apiPage, filterConfigData) {
     apiNumber = 1
     const rawData = await getAPI(apiPage)
     const jsonData = await rawData.json()
+    console.log("json1", jsonData)
     loopOnAPI(jsonData, filterConfigData)
 }
 
@@ -1651,6 +1693,7 @@ async function createRecordsObjFromAPI_2(apiPage, filterConfigData) {
     apiNumber = 2
     const rawData = await getAPI_2(apiPage)
     const jsonData = await rawData.json()
+    console.log("json2", jsonData)
     loopOnAPI(jsonData, filterConfigData)
 }
 
